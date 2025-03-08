@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html>
+<head>
+<base href="">
+<meta charset="UTF-8">
+<title>Sentence Unscrambler</title>
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Arial', sans-serif;
+}
+
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-image: url('https://alittlemoreenglish.weebly.com/uploads/2/6/6/3/26638990/gradient-background-soft-colors-blueish-cloud-sky_orig.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    color: white;
+    padding: 20px;
+}
+
+.container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(26, 42, 108, 0.85);
+    backdrop-filter: blur(10px);
+    padding: 2rem;
+    border-radius: 15px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    max-width: 800px;
+    width: 90%;
+}
+
+.subtitle {
+    font-size: 1.1rem;
+    margin-bottom: 20px;
+    opacity: 0.9;
+}
+
+.scrambled-words {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin: 20px 0;
+}
+
+.word {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 8px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: transform 0.2s;
+    user-select: none;
+}
+
+.word:hover {
+    transform: scale(1.05);
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.word.selected {
+    background: rgba(255, 255, 255, 0.4);
+    transform: scale(0.95);
+}
+
+.answer-area {
+    min-height: 50px;
+    margin: 20px 0;
+    padding: 10px;
+    border: 2px dashed rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+}
+
+button {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    padding: 10px 20px;
+    color: white;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.3s;
+    margin: 5px;
+}
+
+button:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+}
+
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+button.active {
+    background: rgba(46, 204, 113, 0.4); /* Green background for active state */
+}
+
+.score {
+    font-size: 1.2rem;
+    margin: 20px 0;
+}
+
+.feedback {
+    height: 30px;
+    margin: 10px 0;
+    font-weight: bold;
+}
+
+.control-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.directions {
+    display: none;
+    margin: 20px;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    text-align: left;
+}
+
+/* Speech button styles */
+#speakSentenceButton {
+    background: rgba(52, 152, 219, 0.4);
+}
+
+#speakSentenceButton:hover {
+    background: rgba(52, 152, 219, 0.6);
+}
+
+#ttsToggle {
+    transition: all 0.3s;
+}
+
+#ttsToggle.active {
+    background: rgba(46, 204, 113, 0.4);
+}
+
+/* Settings Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 1000;
+}
+
+.modal-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #ffffff;  /* Changed to white background */
+    padding: 2rem;
+    border-radius: 15px;
+    width: 90%;
+    max-width: 600px;
+    color: #333333;  /* Dark gray text for better contrast */
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.setting-group {
+    margin-bottom: 1.5rem;
+}
+
+.setting-group h2 {
+    color: #1a2a6c;  /* Dark blue heading */
+    margin-bottom: 1.5rem;
+    font-size: 1.5rem;
+}
+
+.setting-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-size: 1.1rem;
+    color: #1a2a6c;  /* Dark blue labels */
+    font-weight: 600;
+}
+
+.settings-select {
+    width: 100%;
+    padding: 0.8rem;
+    border-radius: 8px;
+    border: 2px solid #e0e0e0;  /* Light gray border */
+    background: #ffffff;
+    color: #333333;
+    font-size: 1rem;
+    margin-bottom: 1rem;
+    transition: border-color 0.3s ease;
+}
+
+.settings-select:focus {
+    border-color: #3498db;  /* Blue highlight on focus */
+    outline: none;
+}
+
+.settings-textarea {
+    width: 100%;
+    min-height: 200px;
+    padding: 0.8rem;
+    border-radius: 8px;
+    border: 2px solid #e0e0e0;
+    background: #ffffff;
+    color: #333333;
+    font-size: 1rem;
+    resize: vertical;
+    transition: border-color 0.3s ease;
+}
+
+.settings-textarea:focus {
+    border-color: #3498db;
+    outline: none;
+}
+
+.settings-textarea::placeholder {
+    color: #999999;  /* Medium gray placeholder text */
+}
+
+.settings-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    margin-top: 1.5rem;
+}
+
+.settings-button {
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+#saveSettings {
+    background: #3498db;
+    color: white;
+    padding: 0.8rem 2rem;
+}
+
+#saveSettings:hover {
+    background: #2980b9;
+    transform: translateY(-2px);
+}
+
+#closeSettings {
+    background: #e0e0e0;
+    color: #333333;
+}
+
+#closeSettings:hover {
+    background: #d0d0d0;
+    transform: translateY(-2px);
+}
+
+/* Add subtle hover states for interactive elements */
+.settings-select:hover,
+.settings-textarea:hover {
+    border-color: #3498db;
+}
+
+/* Error state for validation */
+.settings-select.error,
+.settings-textarea.error {
+    border-color: #e74c3c;
+}
+
+/* Success state for validation */
+.settings-select.success,
+.settings-textarea.success {
+    border-color: #2ecc71;
+}
+/* Victory Modal Styles */
+#victoryModal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+#victoryModal .modal-content {
+    background: #ffffff;
+    padding: 2rem;
+    border-radius: 15px;
+    text-align: center;
+    color: #333333;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+#victoryModal h2 {
+    color: #1a2a6c;
+    margin-bottom: 1rem;
+}
+
+#victoryModal p {
+    margin-bottom: 1.5rem;
+}
+
+#victoryModal img {
+    margin-bottom: 1.5rem;
+}
+
+#victoryModal button {
+    background: #3498db;
+    color: white;
+    padding: 0.8rem 2rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+#victoryModal button:hover {
+    background: #2980b9;
+    transform: translateY(-2px);
+}
+</style>
+</head>
+<body>
+<div class="container">
+    <h1>Sentence Unscrambler</h1>
+    <p class="subtitle">Finish 5 sentence unscrambling tasks and earn a Pokemon!</p>
+    <p class="score">Score: <span id="score">0</span></p>
+    <div class="feedback" id="feedback"></div>
+    <div class="scrambled-words" id="scrambledWords"></div>
+    <div class="answer-area" id="answerArea"></div>
+    <button id="startButton">Start</button>
+    <button id="checkButton" style="display: none;">Check Answer</button>
+    <button id="skipButton" style="display: none;">Skip This Sentence</button>
+    <button id="nextSentenceButton" style="display: none;">Next Sentence</button>
+    <button id="speakSentenceButton" style="display: none;">
+        <span>🔊 Read Sentence</span>
+    </button>
+    <div class="control-buttons">
+        <button id="settingsButton">Settings</button>
+        <button id="directionsButton">Directions</button>
+        <button id="ttsToggle">Voice: OFF</button>
+    </div>
+    <div class="directions" id="directions">
+        <h3>How to Play:</h3>
+        <p>1. Click on words in any order to construct the original sentence.</p>
+        <p>2. Click Check Answer to verify your solution.</p>
+        <p>3. Complete 5 sentences correctly to win a Pokemon!</p>
+        <p>4. Use Settings to customize your own sentence bank.</p>
+        <p>5. Toggle Voice ON to hear words as you click them.</p>
+        <p>6. After correctly completing a sentence, use the Read Sentence button to hear the full sentence.</p>
+    </div>
+
+    <div class="author-info">
+        Author: Aaron Shi<br>
+        Released in March 2025. v3.2.
+    </div>
+</div>
+
+    <div class="modal" id="settingsModal">
+        <div class="modal-content">
+            <h2>Settings</h2>
+            <div class="setting-group">
+                <label for="sentenceSource">Sentence Bank:</label>
+                <select id="sentenceSource" class="settings-select">
+                    <option value="default">Default (Everyday Life Questions)</option>
+                    <option value="custom">Custom Sentences</option>
+                </select>
+            </div>
+            <div class="setting-group">
+                <label for="customSentences">Custom Sentences (one per line):</label>
+                <textarea id="customSentences" class="settings-textarea" 
+                          placeholder="Enter your custom sentences here, one per line"></textarea>
+            </div>
+            <div class="settings-buttons">
+                <button id="saveSettings">Save Settings</button>
+                <button id="closeSettings">Cancel</button>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+    <!-- Victory Modal -->
+    <div class="modal" id="victoryModal">
+        <div class="modal-content">
+            <h2>Congratulations!</h2>
+            <p>You've completed this sentence unscrambling challenge, and you've won this Pokemon!</p>
+            <div id="pokemonImage"></div>
+            <button onclick="closeModal()">Play Again</button>
+    </div>
+</div>
+</body>
+</html>
